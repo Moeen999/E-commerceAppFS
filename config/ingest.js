@@ -4,7 +4,7 @@ import User from "@/models/User";
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "quickcart-next" });
 
-// ! function to store the data of user in the db using ingest.
+// ! function to store the data of user in the db using inngest and clerk events.
 
 export const syncUserCreation = inngest.createFunction(
   {
@@ -27,15 +27,16 @@ export const syncUserCreation = inngest.createFunction(
   }
 );
 
+// ! function to update the data of user in the db using inngest and clerk events.
 
 export const syncUserUpdate = inngest.createFunction(
   {
-    id:"update-user-from-clerk"
+    id: "update-user-from-clerk",
   },
   {
-    event:"clerk/user.updated"
+    event: "clerk/user.updated",
   },
-  async({event})=>{
+  async ({ event }) => {
     const { id, first_name, last_name, email_addresses, image_url } =
       event.data;
     const userData = {
@@ -45,7 +46,22 @@ export const syncUserUpdate = inngest.createFunction(
       imageUrl: image_url,
     };
     await connectDB();
-    await User.findByIdAndUpdate(id,userData);
+    await User.findByIdAndUpdate(id, userData);
   }
-)
+);
 
+// ! function to store the data of user in the db using inngest and clerk events.
+
+export const syncDeleteUser = inngest.createFunction(
+  {
+    id: "delete-user-with-clerk",
+  },
+  {
+    event: "clerk/user-deleted",
+  },
+  async ({ event }) => {
+    const { id } = event.data;
+    await connectDB();
+    await User.findByIdAndDelete(id);
+  }
+);
